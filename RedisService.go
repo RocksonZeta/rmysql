@@ -48,7 +48,7 @@ func (r *RedisService) AddJsonsInt(objs interface{}, field string, keyFn func(id
 	r.SetJsons(keys, objs, ttl)
 }
 func (r *RedisService) SetJson(key string, value interface{}, secondsLifetime int64) (err error) {
-	bs := r.marshalString(value)
+	bs := r.marshal(value)
 	if secondsLifetime > 0 {
 		_, err = r.Redis.Do("SETEX", key, secondsLifetime, bs)
 	} else {
@@ -127,7 +127,7 @@ func (r *RedisService) SetJsons(keys []string, values interface{}, ttl int64) {
 
 	for i := 0; i < len(args); i += 2 {
 		args[i] = keys[i/2]
-		args[i+1] = r.marshalString(valuesV.Index(i / 2).Interface())
+		args[i+1] = r.marshal(valuesV.Index(i / 2).Interface())
 	}
 	_, err := r.Redis.Do("MSET", args...)
 	CheckError(err)
@@ -174,9 +174,9 @@ func (r *RedisService) HSet(key, field string, value interface{}, secondsLifetim
 	}
 }
 func (r *RedisService) HGet(key, field string, result interface{}) {
-	bs, err := r.Redis.Do("HGET", key, field)
+	bs, err := redis.String(r.Redis.Do("HGET", key, field))
 	CheckError(err)
-	if bs == nil {
+	if bs == "" {
 		return
 	}
 	r.unmarshal(bs, result)
@@ -377,26 +377,28 @@ func (r *RedisService) AllExist(keys ...string) bool {
 	return count == length
 }
 
-func (r *RedisService) marshalString(v interface{}) string {
-	bs := r.marshal(v)
-	return string(bs)
-}
-func (r *RedisService) marshal(v interface{}) []byte {
+// func (r *RedisService) marshalString(v interface{}) string {
+// 	bs := r.marshal(v)
+// 	return string(bs)
+// }
+func (r *RedisService) marshal(v interface{}) string {
 	bs, err := json.Marshal(v)
 	CheckError(err)
-	return bs
+	return string(bs)
 }
 
 func (r *RedisService) unmarshal(v interface{}, out interface{}) {
 	if bs, ok := v.(string); ok {
 		err := json.Unmarshal([]byte(bs), out)
 		CheckError(err)
+		return
 	}
 	if bs, ok := v.([]byte); ok {
 		err := json.Unmarshal(bs, out)
 		CheckError(err)
+		return
 	}
-	Panic("type cast error:not []byte or  type", nil)
+	Panic(reflect.TypeOf(v).String()+" type cast error:not []byte or string type", nil)
 }
 
 func (r *RedisService) GetBytes(key string) []byte {
@@ -414,6 +416,17 @@ func (r *RedisService) Delete(key string) {
 func (r *RedisService) Select(db int) {
 	_, err := r.Redis.Do("SELECT", strconv.Itoa(db))
 	CheckError(err)
+}
+
+//Now seconds
+func (r *RedisService) Now() int64 {
+	s, _ := r.Time()
+	return s
+}
+func (r *RedisService) Time() (int64, int64) {
+	times, err := redis.Int64s(r.Redis.Do("TIME"))
+	CheckError(err)
+	return times[0], times[1]
 }
 
 type RedisValue struct {
