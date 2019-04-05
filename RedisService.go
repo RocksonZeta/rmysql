@@ -71,7 +71,7 @@ func (r *RedisService) GetJson(key string, out interface{}) bool {
 
 //GetJsons eg.GetJsons({"1","2"} , &[]obj)
 func (r *RedisService) GetJsons(keys []string, out interface{}) error {
-	vals, err := redis.Strings(r.Redis.Do("MGET", Args(keys)...))
+	vals, err := redis.Strings(r.Redis.Do("MGET", ArgsString(keys)...))
 	CheckError(err)
 	if vals == nil {
 		return nil
@@ -100,7 +100,7 @@ func (r *RedisService) GetJsons(keys []string, out interface{}) error {
 	return err
 }
 func (r *RedisService) GetJsonMap(keys []string, out interface{}) error {
-	vals, err := redis.Strings(r.Redis.Do("MGET", Args(keys)...))
+	vals, err := redis.Strings(r.Redis.Do("MGET", ArgsString(keys)...))
 	CheckError(err)
 	if vals == nil {
 		return nil
@@ -185,7 +185,7 @@ func (r *RedisService) HDel(key string, field ...string) error {
 	if len(field) <= 0 {
 		return nil
 	}
-	_, err := r.Redis.Do("HDEL", ArgsString(key, field))
+	_, err := r.Redis.Do("HDEL", ArgsStringAhead(key, field))
 	if nil != err {
 		return err
 	}
@@ -427,6 +427,27 @@ func (r *RedisService) Time() (int64, int64) {
 	times, err := redis.Int64s(r.Redis.Do("TIME"))
 	CheckError(err)
 	return times[0], times[1]
+}
+
+//Multi Unwatch Watch ... Exec/Discard
+func (r *RedisService) Multi() {
+	_, err := r.Redis.Do("MULTI")
+	CheckError(err)
+}
+func (r *RedisService) Exec() (interface{}, error) {
+	return r.Redis.Do("EXEC")
+}
+func (r *RedisService) Discard() {
+	_, err := r.Redis.Do("DISCARD")
+	CheckError(err)
+}
+func (r *RedisService) Watch(keys ...string) {
+	_, err := r.Redis.Do("WATCH", ArgsString(keys))
+	CheckError(err)
+}
+func (r *RedisService) Unwatch() {
+	_, err := r.Redis.Do("UNWATCH")
+	CheckError(err)
 }
 
 type RedisValue struct {

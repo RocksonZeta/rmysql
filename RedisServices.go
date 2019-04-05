@@ -8,11 +8,12 @@ import (
 
 type RedisConfig struct {
 	// Network "tcp"
-	Network string
+	// Network string
 	// Addr "127.0.0.1:6379"
-	Addr     string
-	Password string
-	Db       int
+	// Addr     string
+	Url string
+	// Password string
+	Db int
 	// <0 no limit
 	MaxIdle int
 	// < 0 no limit
@@ -26,9 +27,10 @@ type RedisServices struct {
 	Pool   *redis.Pool
 }
 
-func NewRedisServices(addr, password string) *RedisServices {
+//NewRedisServices redisUrl like redis://user:secret@localhost:6379/0?foo=bar&qux=baz
+func NewRedisServices(redisUrl string) *RedisServices {
 
-	r := &RedisServices{Config: RedisConfig{Addr: addr, Password: password}}
+	r := &RedisServices{Config: RedisConfig{Url: redisUrl}}
 	r.initPool()
 	return r
 }
@@ -55,13 +57,13 @@ func (s *RedisServices) initPool() {
 		c.IdleTimeout = 60 * time.Second
 	}
 
-	if c.Network == "" {
-		c.Network = "tcp"
-	}
+	// if c.Network == "" {
+	// 	c.Network = "tcp"
+	// }
 
-	if c.Addr == "" {
-		c.Addr = "127.0.0.1:6379"
-	}
+	// if c.Addr == "" {
+	// 	c.Addr = "127.0.0.1:6379"
+	// }
 	if c.MaxIdle == 0 {
 		c.MaxIdle = 3
 	}
@@ -82,13 +84,13 @@ func (s *RedisServices) initPool() {
 }
 
 func dial(config RedisConfig) (redis.Conn, error) {
-	var opts []redis.DialOption
-	if config.Db != 0 {
-		opts = append(opts, redis.DialDatabase(config.Db))
-	}
-	if config.Password != "" {
-		opts = append(opts, redis.DialPassword(config.Password))
-	}
-	c, err := redis.Dial(config.Network, config.Addr, opts...)
+	// var opts []redis.DialOption
+	// if config.Db != 0 {
+	// 	opts = append(opts, redis.DialDatabase(config.Db))
+	// }
+	// if config.Password != "" {
+	// 	opts = append(opts, redis.DialPassword(config.Password))
+	// }
+	c, err := redis.DialURL(config.Url)
 	return c, err
 }

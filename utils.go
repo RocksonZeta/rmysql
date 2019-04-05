@@ -21,7 +21,14 @@ func Args(args interface{}) []interface{} {
 	}
 	return r
 }
-func ArgsString(key string, fields []string) []interface{} {
+func ArgsString(fields []string) []interface{} {
+	args := make([]interface{}, len(fields))
+	for i := 0; i < len(fields); i++ {
+		args[i] = fields[i]
+	}
+	return args
+}
+func ArgsStringAhead(key string, fields []string) []interface{} {
 	args := make([]interface{}, len(fields)+1)
 	args[0] = key
 	for i := 0; i < len(fields); i++ {
