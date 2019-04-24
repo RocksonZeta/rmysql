@@ -57,31 +57,3 @@ func (d Dao) List(ids []int, result interface{}, redisKey func(int) string) {
 	// structutil.Join(result, left, result)
 	return
 }
-
-func (d Dao) Delete(table string, id int, redisKey string) {
-	d.Redis.Delete(redisKey)
-	d.Mysql.Delete(table, id)
-}
-func (d Dao) Update(table string, param interface{}, redisKey string) {
-	usql := "update `" + table + "` set "
-	paramV := reflect.ValueOf(param)
-	paramT := reflect.TypeOf(param)
-	var args []interface{}
-	nf := paramV.NumField()
-	var id interface{}
-	for i := 0; i < nf; i++ {
-		f := paramV.Field(i)
-		ft := paramT.Field(i)
-		name := ft.Name
-		if name == "Id" {
-			id = f.Interface()
-			continue
-		}
-		usql += " `" + name + "`=?,"
-		args = append(args, f.Interface())
-	}
-	usql = usql[0:len(usql)-1] + " where id=?"
-	args = append(args, id)
-	d.Mysql.Exec(usql, args...)
-	d.Redis.Delete(redisKey)
-}

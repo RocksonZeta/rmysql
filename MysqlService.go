@@ -119,10 +119,32 @@ func (m *MysqlWrapper) Insert(list ...interface{}) {
 	err := m.Executor.Insert(list...)
 	CheckError(err)
 }
-func (m *MysqlWrapper) Update(list ...interface{}) int64 {
+func (m *MysqlWrapper) UpdateObjects(list ...interface{}) int64 {
 	r, err := m.Executor.Update(list...)
 	CheckError(err)
 	return r
+}
+func (m *MysqlWrapper) Update(table string, param interface{}) {
+	usql := "update `" + table + "` set "
+	paramV := reflect.ValueOf(param)
+	paramT := reflect.TypeOf(param)
+	var args []interface{}
+	nf := paramV.NumField()
+	var id interface{}
+	for i := 0; i < nf; i++ {
+		f := paramV.Field(i)
+		ft := paramT.Field(i)
+		name := ft.Name
+		if name == "Id" {
+			id = f.Interface()
+			continue
+		}
+		usql += " `" + name + "`=?,"
+		args = append(args, f.Interface())
+	}
+	usql = usql[0:len(usql)-1] + " where id=?"
+	args = append(args, id)
+	m.Executor.Exec(usql, args...)
 }
 func (m *MysqlWrapper) GetByKey(i interface{}, kvs ...interface{}) {
 	if len(kvs) <= 0 {
