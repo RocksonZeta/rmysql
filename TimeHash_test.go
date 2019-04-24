@@ -9,7 +9,7 @@ import (
 )
 
 func TestTimeHashGet1(t *testing.T) {
-	red := rmysql.NewRedisServices(conf.Redis).Get()
+	red := rmysql.NewRedisService(conf.Redis)
 	th := rmysql.NewTimeHash(red, "test-th1", 30, 5, 3)
 	defer th.Redis.Close()
 	th.Set("k1")
