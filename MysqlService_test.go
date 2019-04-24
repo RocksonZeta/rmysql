@@ -27,7 +27,7 @@ func init() {
 	fmt.Println(conf)
 }
 
-// var conStr = "admin:sZlryBOgLxAuAtx9@tcp(test.iqidao.com:43120)/iqidao2?charset=utf8mb4"
+// var conStr = "admin:hello123@tcp(localhost:6379)/test?charset=utf8mb4"
 
 func TestSelect(t *testing.T) {
 	my := rmysql.NewMysqlService(conf.Mysql, "test", true)
