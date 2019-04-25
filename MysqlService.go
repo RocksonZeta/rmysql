@@ -54,6 +54,26 @@ func (s *MysqlService) Add(i interface{}) {
 	s.AddTable(reflect.ValueOf(i).Elem().Interface())
 	s.Insert(i)
 }
+func (s *MysqlService) WithTransaction(fn func()) {
+	defer func() {
+		if err := recover(); nil != err {
+			err1 := s.Rollback()
+			if err != nil {
+				panic(err)
+			}
+			if err1 != nil {
+				panic(err1)
+			}
+		} else {
+			err := s.Commit()
+			if err != nil {
+				panic(err)
+			}
+		}
+	}()
+	s.Begin()
+	fn()
+}
 
 type MysqlWrapper struct {
 	Executor gorp.SqlExecutor

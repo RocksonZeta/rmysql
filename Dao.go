@@ -10,8 +10,8 @@ type Dao struct {
 	TTL   int64
 }
 
-func NewDao(Mysql *MysqlService, Redis *RedisService, ttl int64) Dao {
-	return Dao{Mysql: Mysql, Redis: Redis, TTL: ttl}
+func NewDao(mysql *MysqlService, redis *RedisService, ttl int64) Dao {
+	return Dao{Mysql: mysql, Redis: redis, TTL: ttl}
 }
 
 func (d Dao) Close() {

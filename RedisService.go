@@ -185,7 +185,7 @@ func (r *RedisService) HDel(key string, field ...string) error {
 	if len(field) <= 0 {
 		return nil
 	}
-	_, err := r.Redis.Do("HDEL", ArgsStringAhead(key, field))
+	_, err := r.Redis.Do("HDEL", ArgsStringAhead(key, field)...)
 	if nil != err {
 		return err
 	}
@@ -442,12 +442,30 @@ func (r *RedisService) Discard() {
 	CheckError(err)
 }
 func (r *RedisService) Watch(keys ...string) {
-	_, err := r.Redis.Do("WATCH", ArgsString(keys))
+	if len(keys) <= 0 {
+		return
+	}
+	_, err := r.Redis.Do("WATCH", ArgsString(keys)...)
 	CheckError(err)
 }
 func (r *RedisService) Unwatch() {
 	_, err := r.Redis.Do("UNWATCH")
 	CheckError(err)
+}
+func (r *RedisService) WithTransaction(fn func(), watchKeys ...string) []interface{} {
+	// r.Unwatch()
+	r.Watch(watchKeys...)
+	r.Multi()
+	fn()
+	result, err := r.Exec()
+	if err != nil {
+		CheckError(err)
+	}
+	if nil == result {
+		return nil
+	}
+	return result.([]interface{})
+
 }
 
 type RedisValue struct {

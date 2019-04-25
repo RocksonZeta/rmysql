@@ -2,6 +2,7 @@ package rmysql_test
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"rmysql"
@@ -34,4 +35,13 @@ func TestSelect(t *testing.T) {
 	defer my.Close()
 	r := my.SelectInt("select count(*) from User where id>?", 100)
 	fmt.Println(r)
+}
+func TestMysqlTransaction(t *testing.T) {
+	my := rmysql.NewMysqlService(conf.Mysql, "test", true)
+	defer my.Close()
+	my.WithTransaction(func() {
+		r := my.SelectInt("select count(*) from User where id>?", 100)
+		fmt.Println(r)
+		panic(errors.New("hello"))
+	})
 }
