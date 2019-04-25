@@ -453,6 +453,14 @@ func (r *RedisService) Unwatch() {
 	CheckError(err)
 }
 func (r *RedisService) WithTransaction(fn func(), watchKeys ...string) []interface{} {
+	defer func() {
+		if err := recover(); nil != err {
+			r.Discard()
+			if err != nil {
+				panic(err)
+			}
+		}
+	}()
 	// r.Unwatch()
 	r.Watch(watchKeys...)
 	r.Multi()
